@@ -4,7 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -22,6 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.util.Objects;
+import java.util.UUID;
 
 
 public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGestureListener {
@@ -41,6 +46,12 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
     private ImageButton report;
     private ImageButton share;
 
+    LocationManager lm;
+    Location location;
+    double longitude;
+    double latitude;
+    String deviceId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +66,38 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
         report = (ImageButton) findViewById(R.id.imageButton);
         share = (ImageButton) findViewById(R.id.imageButton1);
+
+        lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        longitude = location.getLongitude();
+        latitude = location.getLatitude();
+
+        final LocationListener locationListener = new LocationListener() {
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+            public void onLocationChanged(Location location) {
+                longitude = location.getLongitude();
+                latitude = location.getLatitude();
+            }
+        };
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
+
+        final TelephonyManager tm = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        final String tmDevice, tmSerial, androidId;
+        tmDevice = "" + tm.getDeviceId();
+        tmSerial = "" + tm.getSimSerialNumber();
+        androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+        UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
+        deviceId = deviceUuid.toString();
 
         getHowls();
 
@@ -158,8 +201,8 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
     public void getHowls(){
         AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
-        //client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/region/?latitude="+"&longitude="+"&isNSFW=true&user_id="+"&isImage=true", new AsyncHttpResponseHandler() {
-        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/", new AsyncHttpResponseHandler() {
+        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/region/?latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&user_id="+ deviceId + "&isImage=true&limit=5", new AsyncHttpResponseHandler() {
+        //client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/", new AsyncHttpResponseHandler() {
 
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
@@ -167,8 +210,8 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                 final JSONArray arr;
                 try {
                     arr = new JSONArray(new String(response));
-                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("media_url"));
-                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("is_image"));
+                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(1).optString("media_url"));
+                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(1).optString("is_image"));
                     Log.v("com.wolfpakapp.httpreqs", String.valueOf(arr.length()));
 
                     // final int check = arr.length();
