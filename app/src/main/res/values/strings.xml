@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">WolfpakFeed</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="report">Report</string>
+    <string name="howl">howl</string>
+</resources>
