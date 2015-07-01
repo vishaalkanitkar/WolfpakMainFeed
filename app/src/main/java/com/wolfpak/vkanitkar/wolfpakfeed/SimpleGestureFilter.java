@@ -1,8 +1,5 @@
 package com.wolfpak.vkanitkar.wolfpakfeed;
 
-/**
- * Created by Vishaal on 7/1/15.
- */
 import android.app.Activity;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -20,9 +17,9 @@ public class SimpleGestureFilter extends SimpleOnGestureListener{
     public final static int MODE_DYNAMIC     = 2;
 
     private final static int ACTION_FAKE = -13; //just an unlikely number
-    private int swipe_Min_Distance = 100;
-    private int swipe_Max_Distance = 500;
-    private int swipe_Min_Velocity = 10;
+    private int swipe_Min_Distance = 50;
+    private int swipe_Max_Distance = 1350;
+    private int swipe_Min_Velocity = 50;
 
     private int mode             = MODE_DYNAMIC;
     private boolean running      = true;
