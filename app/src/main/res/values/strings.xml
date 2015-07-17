@@ -1,9 +1,12 @@
 <resources>
-    <string name="app_name">WolfpakFeed</string>
+    <string name="app_name">Wolfpak</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="report">Report</string>
     <string name="howl">howl</string>
     <string name="NoHowl">Sorry no one is howling right now! Tap to refresh. Feel free to view the leaderboard.</string>
+    <string name="facebook_app_id">1604860893099435</string>
     <string name="test">test</string>
+    <string name="dislike">DISLIKE</string>
+    <string name="like">LIKE</string>
 </resources>
