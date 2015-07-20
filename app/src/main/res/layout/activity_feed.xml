@@ -1,4 +1,4 @@
-<RelativeLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/frame"
@@ -11,46 +11,12 @@
     <ImageView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:id="@+id/imageView"
-        android:layout_margin="0dp"
-        android:padding="0dp"
-        android:scaleType="fitXY"
-        android:contentDescription="@string/howl" />
-
-    <VideoView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/videoView"
-        android:layout_margin="0dp"
-        android:padding="0dp"
-        android:layout_gravity="center_horizontal|bottom" />
-
-    <ImageView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/imageView1"
-        android:layout_margin="0dp"
-        android:padding="0dp"
-        android:scaleType="fitXY"
-        android:contentDescription="@string/howl" />
-
-    <VideoView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/videoView1"
-        android:layout_margin="0dp"
-        android:padding="0dp"
-        android:layout_gravity="center_horizontal|bottom" />
-
-    <ImageView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
         android:id="@+id/imageView2"
         android:layout_margin="0dp"
         android:padding="0dp"
         android:scaleType="fitXY"
-        android:contentDescription="@string/howl" />
-
+        android:contentDescription="@string/howl"
+        android:src="@drawable/wolfpaktest"/>
 
     <ImageButton
         android:layout_width="39dp"
@@ -58,9 +24,7 @@
         android:id="@+id/imageButton"
         android:contentDescription="@string/report"
         android:src="@drawable/alert"
-        android:layout_gravity="end|top"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_gravity="end|top" />
 
     <ImageButton
         android:layout_width="40dp"
@@ -68,36 +32,6 @@
         android:id="@+id/imageButton1"
         android:contentDescription="@string/report"
         android:src="@drawable/facebook"
-        android:layout_gravity="start|top"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_gravity="start|top" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:textSize="40sp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/like"
-        android:id="@+id/textView2"
-        android:background="#ff0f0f0f"
-        android:textColor="#ff00ff50"
-        android:layout_gravity="end|bottom"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="28dp"
-        android:layout_marginBottom="27dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="50dp"
-        android:textSize="40sp"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:text="@string/dislike"
-        android:id="@+id/textView"
-        android:textColor="#ffff222e"
-        android:background="#fd020611"
-        android:layout_gravity="end|top"
-        android:layout_below="@+id/imageButton1"
-        android:layout_alignEnd="@+id/textView2" />
-
-</RelativeLayout>
+</FrameLayout>

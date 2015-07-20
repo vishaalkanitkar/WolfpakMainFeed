@@ -14,6 +14,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MotionEventCompat;
 import android.telephony.TelephonyManager;
 import android.text.InputType;
 import android.util.Base64;
@@ -25,9 +26,9 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
 import android.widget.VideoView;
 
 import com.facebook.CallbackManager;
@@ -43,7 +44,6 @@ import com.facebook.share.model.ShareVideoContent;
 import com.facebook.share.widget.ShareDialog;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.RequestParams;
 import com.squareup.picasso.Picasso;
 
 import org.apache.http.Header;
@@ -59,43 +59,36 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 
-
-public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGestureListener {
-
-    private SimpleGestureFilter detector;
-
-    ImageView howls;
-    ImageView switch_howls;
-
-    VideoView howls1;
-    VideoView switch_howls1;
-
+public class MainFeed extends Activity {
+    //Layouts & Buttons
+    FrameLayout myLayout;
     ImageView refresh_howl;
+    private ImageButton share;
+    private ImageButton report;
 
-    int length = 6;
+    int length = 10;
     int number = 0;
-    int oldhowl;
-    int swipedirection = 0;
-    int animation_view = 0;
 
+    //Arrays for JSON Object String
     String[] HowlsURL = new String[length];
     String[] HowlsIsImage = new String[length];
     String[] HowlsUserID = new String[length];
     String[] HowlsPostID = new String[length];
+    String[] HowlsHandle = new String[length];
 
+    //Random Number
     final Context context = this;
     private String random_string;
     private String random_input = "";
-    private ImageButton share;
-    private ImageButton report;
 
-
+    //Location
     LocationManager lm;
     Location location;
     double longitude;
     double latitude;
     String deviceId;
 
+    //Facebook Share Features
     ShareDialog shareDialog;
     private CallbackManager callbackManager;
     private LoginManager manager;
@@ -125,27 +118,15 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
         } catch (NoSuchAlgorithmException e) {
         }
 
-        // get reference to the views
-        howls = (ImageView) findViewById(R.id.imageView);
-        howls1 = (VideoView) findViewById(R.id.videoView);
-        switch_howls = (ImageView) findViewById(R.id.imageView1);
-        switch_howls1 = (VideoView) findViewById(R.id.videoView1);
+        //Reference Refresh and FrameLayout
+        myLayout = (FrameLayout) findViewById(R.id.frame);
         refresh_howl = (ImageView) findViewById(R.id.imageView2);
-
-        refresh_howl.setVisibility(View.INVISIBLE);
-        switch_howls.setVisibility(View.INVISIBLE);
-        howls.setVisibility(View.INVISIBLE);
-        howls1.setVisibility(View.INVISIBLE); //removes initial empty black VideoView
-        switch_howls1.setVisibility(View.INVISIBLE);
-
-        //Swipe Detector
-        detector = new SimpleGestureFilter(this,this);
 
         //Dialogs
         report = (ImageButton) findViewById(R.id.imageButton);
         share = (ImageButton) findViewById(R.id.imageButton1);
 
-        //setting location for query string
+        //Setting Location for get() query string
         lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         longitude = location.getLongitude();
@@ -193,25 +174,27 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                 share.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View arg0) {
-                        if (howls.getVisibility() == View.VISIBLE || switch_howls.getVisibility() == View.VISIBLE){
-                            sharePicFB();
-                        } else {
-                            shareVideoFB();
-                        }
+//                        if (howls.getVisibility() == View.VISIBLE || switch_howls.getVisibility() == View.VISIBLE){
+//                            sharePicFB();
+//                        } else {
+//                            shareVideoFB();
+//                        }
                     }
                 });
             }
+
             @Override
             public void onCancel() {
                 System.out.println("onCancel");
             }
+
             @Override
             public void onError(FacebookException exception) {
                 System.out.println("onError");
             }
         });
 
-        //buttonReport listener
+        //Report_Button listener
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -219,443 +202,64 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
             }
         });
 
+        refresh_howl.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                number = 0;
+                getHowls();
+            }
+        });
     }
 
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent me) {
-        // Call onTouchEvent of SimpleGestureFilter class
-        this.detector.onTouchEvent(me);
-        return super.dispatchTouchEvent(me);
+    //PreLoad Views
+    public void loadViews(String string, String url){
+        if(Objects.equals(string, "true"))
+            addImageView(url);
+        else
+            addVideoView(url);
     }
 
-    @Override
-    public void onSwipe(int direction) {
-       // SlideToDown();
-        switch (direction) {
+    //Loads ImageView
+    public void addImageView(String url) {
+        ImageView imageView = new ImageView(this);
 
-            case SimpleGestureFilter.SWIPE_RIGHT :
-                break;
-            case SimpleGestureFilter.SWIPE_LEFT :
-                break;
-            case SimpleGestureFilter.SWIPE_DOWN :
-                int a =-1;
-                incrHowls(a);
-                swipedirection=1;
-                ++number;
-                oldhowl = number - 1;
-                //moveAnimation();
-                // Calls No Howls Page if array is empty
-//                MainFeed.this.runOnUiThreadMainFeed.this.runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        SlideToDown();
-//                    }
-//                });(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        SlideToDown();
-//                    }
-//                });
-                if(HowlsURL[number]== null){
-                    refresh_howl.setVisibility(View.VISIBLE);
-                    howls.setVisibility(View.INVISIBLE);
-                    howls1.setVisibility(View.INVISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    //Turns swipe detector off (stops array out of bounds error)
-                    detector.setEnabled(false);
-                    Picasso.with(refresh_howl.getContext()).load(R.drawable.wolfpaktest).into(refresh_howl);
-                    //Turns swipe detector back on
-                    refresh_howl.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View arg0) {
-                            number = 0;
-                            getHowls();
-                            detector.setEnabled(true);
-                        }
-                    });
-                }
-                else {
-                    chooseView(HowlsIsImage[number], HowlsIsImage[oldhowl], HowlsURL[number]);
-                    Toast.makeText(getApplicationContext(), "DOWN", Toast.LENGTH_SHORT).show();
+        imageView.setLayoutParams(new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        //imageView.setId(R.id.classic + number);
 
-                }
-                break;
-            case SimpleGestureFilter.SWIPE_UP :
-                int b =1;
-                incrHowls(b);
-                swipedirection=2;
-                ++number;
-                oldhowl = number - 1;
-//                MainFeed.this.runOnUiThread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        SlideToAbove();
-//                    }
-//                });
-                // moveAnimation();
-                if(HowlsURL[number]== null){
-                    refresh_howl.setVisibility(View.VISIBLE);
-                    howls.setVisibility(View.INVISIBLE);
-                    howls1.setVisibility(View.INVISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    detector.setEnabled(false);
-                    Picasso.with(refresh_howl.getContext()).load(R.drawable.wolfpaktest).into(refresh_howl);
-
-                    refresh_howl.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View arg0) {
-                            number = 0;
-                            getHowls();
-                            detector.setEnabled(true);
-                        }
-                    });
-                }
-                else {
-                    chooseView(HowlsIsImage[number], HowlsIsImage[oldhowl], HowlsURL[number]);
-                    Toast.makeText(getApplicationContext(), "UP", Toast.LENGTH_SHORT).show();
-                }
-                break;
-
-        }
+        Picasso.with(imageView.getContext()).load(url).into(imageView);
+        imageView.setOnTouchListener(new ImageOnTouchListener());
+        myLayout.addView(imageView);
+        share.bringToFront();
+        report.bringToFront();
     }
 
-    @Override
-    public void onDoubleTap() {
+    //Loads VideoView
+    public void addVideoView(String url){
+        VideoView videoView = new VideoView(this);
+
+        videoView.setLayoutParams(new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        videoView.setId(videoView.generateViewId());
+     //   videoView.setId(R.id.classic1+number);
+
+        Uri uri = Uri.parse(url);
+        videoView.setVideoURI(uri);
+        videoView.requestFocus();
+        videoView.start();
+
+        videoView.setOnTouchListener(new ImageOnTouchListener());
+        myLayout.addView(videoView);
+        share.bringToFront();
+        report.bringToFront();
     }
 
-    public void chooseView(String bool, String oldbool, String url){
-        switch (bool){
-            case "true":
-                if(oldbool=="true" && howls.getVisibility() == View.VISIBLE ){
-                    Picasso.with(switch_howls.getContext()).load(url).into(switch_howls);
-
-                    howls1.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    switch_howls.setVisibility(View.VISIBLE);
-                    Log.v("Debug", "Visiblity");
-
-//                    MainFeed.this.runOnUiThread(load);
-//                    load=new Thread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            Picasso.with(switch_howls.getContext()).load(url).into(switch_howls);
-//                        }
-//                    });
-//                    load.start();
-
-                    if(swipedirection==1){
-                        SlideToDown();Log.v("Debug","Swipe Down");}
-                    else{
-                        SlideToAbove();Log.v("Debug", "Swipe Above");}
-
-
-                    howls.setVisibility(View.INVISIBLE);
-
-
-                    animation_view=1;
-
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-                                switch_howls.buildDrawingCache();
-                                Bitmap image = switch_howls.getDrawingCache();
-                                SharePhoto photo = new SharePhoto.Builder()
-                                        .setUserGenerated(true)
-                                        .setBitmap(image)
-                                        .setCaption("#WOLFPAK2015")
-                                        .build();
-                                SharePhotoContent content = new SharePhotoContent.Builder()
-                                        .addPhoto(photo)
-                                        .build();
-                                shareDialog.show(content);
-                            }
-                        });
-                    }
-
-                }
-                else if(oldbool=="true" && switch_howls.getVisibility() == View.VISIBLE ){
-                    Picasso.with(howls.getContext()).load(url).into(howls);
-
-                    howls1.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    howls.setVisibility(View.VISIBLE);
-
-                    if(swipedirection==1)
-                        SlideToDown();
-                    else
-                        SlideToAbove();
-
-                    switch_howls.setVisibility(View.INVISIBLE);
-
-                    animation_view=0;
-
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-                                howls.buildDrawingCache();
-                                Bitmap image = howls.getDrawingCache();
-                                SharePhoto photo = new SharePhoto.Builder()
-                                        .setUserGenerated(true)
-                                        .setBitmap(image)
-                                        .setCaption("#WOLFPAK2015")
-                                        .build();
-                                SharePhotoContent content = new SharePhotoContent.Builder()
-                                        .addPhoto(photo)
-                                        .build();
-                                shareDialog.show(content);
-                            }
-                        });
-                    }
-                }
-                else if(oldbool=="false"){
-                    Picasso.with(howls.getContext()).load(url).into(howls);
-
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    howls.setVisibility(View.VISIBLE);
-
-                    if(swipedirection==1)
-                        SlideToDown();
-                    else
-                        SlideToAbove();
-
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    howls1.setVisibility(View.INVISIBLE);
-
-
-                    animation_view=0;
-
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-                                howls.buildDrawingCache();
-                                Bitmap image = howls.getDrawingCache();
-                                SharePhoto photo = new SharePhoto.Builder()
-                                        .setUserGenerated(true)
-                                        .setBitmap(image)
-                                        .setCaption("#WOLFPAK2014")
-                                        .build();
-                                SharePhotoContent content = new SharePhotoContent.Builder()
-                                        .addPhoto(photo)
-                                        .build();
-                                shareDialog.show(content);
-                            }
-                        });
-                    }
-                }
-                else if(oldbool=="start"){
-                    Picasso.with(howls.getContext()).load(url).into(howls);
-                    howls.setVisibility(View.VISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    howls1.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    animation_view=0;
-
-                        if(number!=0) {
-                            share.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View arg0) {
-                                    sharePicFB();
-                                }
-                            });
-                        }
-
-                }
-                break;
-            case "false":
-                if(oldbool=="false" && howls1.getVisibility() == View.VISIBLE ){
-                    Uri uri = Uri.parse(url);
-                    switch_howls1.setVideoURI(uri);
-                    switch_howls1.requestFocus();
-
-                    howls.setVisibility(View.INVISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.VISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    if(swipedirection==1)
-                        SlideToDown();
-                    else
-                        SlideToAbove();
-
-                    switch_howls1.start();
-                    refresh_howl.setVisibility(View.INVISIBLE);
-                    howls1.setVisibility(View.INVISIBLE);
-
-                    animation_view=3;
-
-
-
-                    switch_howls1.start();
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-
-                            }
-                        });
-                    }
-
-                }
-                else if(oldbool=="false" && switch_howls1.getVisibility() == View.VISIBLE ){
-                    Uri uri = Uri.parse(url);
-                    howls1.setVideoURI(uri);
-                    howls1.requestFocus();
-
-                    howls.setVisibility(View.INVISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    howls1.setVisibility(View.VISIBLE);
-
-                    if(swipedirection==1)
-                        SlideToDown();
-                    else
-                        SlideToAbove();
-
-                    howls1.start();
-                    switch_howls1.setVisibility(View.INVISIBLE);
-
-
-                    animation_view = 2;
-
-
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-
-                            }
-                        });
-                    }
-                }
-                else if(oldbool=="true"){
-                    Uri uri = Uri.parse(url);
-                    howls1.setVideoURI(uri);
-                    howls1.requestFocus();
-
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-
-                    howls1.setVisibility(View.VISIBLE);
-
-                    if(swipedirection==1)
-                        SlideToDown();
-                    else
-                        SlideToAbove();
-
-                    howls1.start();
-                    howls.setVisibility(View.INVISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    animation_view=2;
-
-                    if(number!=0) {
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-
-                            }
-                        });
-                    }
-                }
-                else if(oldbool=="start"){
-                    Uri uri = Uri.parse(url);
-                    howls1.setVideoURI(uri);
-                    howls1.requestFocus();
-                    howls1.start();
-                    howls1.setVisibility(View.VISIBLE);
-                    switch_howls.setVisibility(View.INVISIBLE);
-                    howls.setVisibility(View.INVISIBLE);
-                    switch_howls1.setVisibility(View.INVISIBLE);
-                    refresh_howl.setVisibility(View.INVISIBLE);
-                    animation_view=2;
-
-                        share.setOnClickListener(new View.OnClickListener() {
-                            @Override
-                            public void onClick(View arg0) {
-                                if (number != 0) {
-                                    share.setOnClickListener(new View.OnClickListener() {
-                                        @Override
-                                        public void onClick(View arg0) {
-                                            shareVideoFB();
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                    }
-                break;
-                }
-
-        }
-//
-//            if (Objects.equals(bool, "true")) {
-//                howls.setVisibility(View.VISIBLE);
-//                howls1.setVisibility(View.INVISIBLE);
-//
-//                Picasso.with(howls.getContext()).load(url).into(howls);
-//                if(number!=0) {
-//                    share.setOnClickListener(new View.OnClickListener() {
-//                        @Override
-//                        public void onClick(View arg0) {
-//                            sharePicFB();
-//                        }
-//                    });
-//                }
-//            } else {
-//                howls.setVisibility(View.INVISIBLE);
-//                howls1.setVisibility(View.VISIBLE);
-//                Uri uri = Uri.parse(url);
-//
-//                howls1.setVideoURI(uri);
-//                howls1.requestFocus();
-//                howls1.start();
-//                share.setOnClickListener(new View.OnClickListener() {
-//                    @Override
-//                    public void onClick(View arg0) {
-//                        if (number != 0) {
-//                            share.setOnClickListener(new View.OnClickListener() {
-//                                @Override
-//                                public void onClick(View arg0) {
-//                                    shareVideoFB();
-//                                }
-//                            });
-//                        }
-//                    }
-//                });
-//            }
-
-    public void chooseView(){
-            howls.setVisibility(View.VISIBLE);
-            howls1.setVisibility(View.INVISIBLE);
-            Picasso.with(howls.getContext()).load(R.drawable.wolfpaktest).into(howls);
-            howls.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View arg0) {
-                    number = 0;
-                    getHowls();
-                }
-            });
-    }
-
+    //Asynchronous HTTP Client - Pull Image/Video from Server
     public void getHowls(){
         AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
-        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id="+"temp_test_id"+"&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/", new AsyncHttpResponseHandler() {
-            // "?latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&user_id=" + deviceId + "&limit=5", new AsyncHttpResponseHandler() {
-            //client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/", new AsyncHttpResponseHandler() {
-
+        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id" + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/", new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 // ...
@@ -665,8 +269,6 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                     Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("media_url"));
                     Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("is_image"));
                     Log.v("com.wolfpakapp.httpreqs", String.valueOf(arr.length()));
-
-                    // final int check = arr.length();
 
                     MainFeed.this.runOnUiThread(new Runnable() {
                         @Override
@@ -693,19 +295,19 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
+                                try {
+                                    HowlsHandle[x] = arr.getJSONObject(x).optString("handle");
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                            // public void
-//                            if (HowlsURL[number] == null) {
-//                                chooseView();
-//                            } else {
-                                chooseView(HowlsIsImage[0], "start" , HowlsURL[0]);
-
-//                            }
-                            // Toast.makeText(getApplicationContext(), HowlsURL[0], Toast.LENGTH_LONG).show();
-                            // Toast.makeText(getApplicationContext(), "BREAK", Toast.LENGTH_SHORT).show();
-                            // Toast.makeText(getApplicationContext(), HowlsIsImage[0], Toast.LENGTH_LONG).show();
                         }
                     });
+
+                    for (int x = 4; x > -1; x--) {
+                        loadViews(HowlsIsImage[x], HowlsURL[x]);
+                    }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -718,15 +320,10 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
     }
 
+    //Asynchronous HTTP Client - Incr/Decr Image/Video in Server
     public void incrHowls(int status) {
         AsyncHttpClient client1 = new AsyncHttpClient(true, 80, 443);
-//        AsyncHttpClient client2 = new AsyncHttpClient(true, 80, 443);
-        RequestParams params = new RequestParams();
-
-//        params.put("post",HowlsPostID[number]);
-//        params.put("user_liked=temp_test_id");
-//        params.put("status",status);
-            client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/?posts="+HowlsPostID[number]+ "&user_liked=temp_test_id&status="+status+"/", new AsyncHttpResponseHandler() {
+            client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/?post=" + HowlsPostID[number] + "&user_liked=temp_test_id&status=" + status + "/", new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
 
@@ -738,74 +335,11 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                 }
             });
     }
-//        else {
-//            client2.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/dec_likes/"+HowlsPostID[number]+"/", params, new AsyncHttpResponseHandler() {
-//                @Override
-//                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-//
-//                }
-//
-//                @Override
-//                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-//
-//                }
-//            });
-//        }
 
-//    public void sharedialog(){
-//
-//        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//        builder.setTitle("Share!");
-//        builder.setItems(new CharSequence[]
-//                        {"Facebook", "Twitter", "Instagram"},
-//                new DialogInterface.OnClickListener() {
-//                    //@SuppressLint("ShowToast")
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        // The 'which' argument contains the index position
-//                        // of the selected item
-//                        switch (which) {
-//                            case 0:
-//                                manager.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-//                                    @Override
-//                                    public void onSuccess(LoginResult loginResult) {
-//                                        //share.setOnClickListener(new View.OnClickListener() {
-//                                        //  @Override
-//                                        //public void onClick(View arg0) {
-//                                        if (howls.getVisibility() == View.VISIBLE) {
-//                                            sharePicFB();
-//                                        } else {
-//                                            shareVideoFB();
-//                                        }
-//                                    }
-//
-//                                    // });
-//                                    //}
-//
-//                                    @Override
-//                                    public void onCancel() {
-//                                        System.out.println("onCancel");
-//                                    }
-//
-//                                    @Override
-//                                    public void onError(FacebookException exception) {
-//                                        System.out.println("onError");
-//                                    }
-//                                });
-//                                break;
-//                            case 1:
-//                                break;
-//                            case 2:
-//                                break;
-//                        }
-//                    }
-//                });
-//        builder.create().show();
-//
-//    }
-
-    public void sharePicFB() {
-        howls.buildDrawingCache();
-                Bitmap image = howls.getDrawingCache();
+    //Share Picture to Facebook
+    public void sharePicFB(ImageView imageView) {
+        imageView.buildDrawingCache();
+                Bitmap image = imageView.getDrawingCache();
         SharePhoto photo = new SharePhoto.Builder()
                         .setUserGenerated(true)
                         .setBitmap(image)
@@ -818,17 +352,18 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
     }
 
+    //Share Video to Facebook
     public void shareVideoFB(){
                     Uri mUri = null;
                     try {
                         Field mUriField = VideoView.class.getDeclaredField("mUri");
                         mUriField.setAccessible(true);
-                        mUri = (Uri)mUriField.get(howls1);
+                       // mUri = (Uri)mUriField.get(howls1);
                     } catch(Exception e) {
                     }
 
                     ShareVideo video= new ShareVideo.Builder()
-                            .setLocalUrl(mUri)
+                            .setLocalUrl(mUri) //alwaysNull - Check later
                             .build();
                     ShareVideoContent content = new ShareVideoContent.Builder()
                             .setVideo(video)
@@ -837,6 +372,7 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
                     shareDialog.show(content);
     }
 
+    //Asynchronous HTTP Client - Reports Image/Video in Server
     public void reportHowl(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
         final EditText random = new EditText(this);
@@ -915,6 +451,7 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
         alertDialog.show();
     }
 
+    //Random Number Generator for reportHowl()
     public void randomstring(){
         char[] chars1 = "ABCDEF012GHIJKL345MNOPQR678STUVWXYZ9".toCharArray();
         StringBuilder sb1 = new StringBuilder();
@@ -927,36 +464,18 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
         random_string = sb1.toString();
     }
 
-    public void SlideToAbove() {
+    //SlideToAbove Animation
+    public void SlideToAbove(View v) {
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                 0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
 
-        slide.setDuration(5000);
-
+        slide.setDuration(1500);
 //        RotateAnimation rotate = new RotateAnimation(180, 250, Animation.RELATIVE_TO_SELF, 0.5f,  Animation.RELATIVE_TO_SELF, 0.5f);
 //        rotate.setDuration(5000);
-
-        switch(animation_view){
-            case 0:
-                howls.startAnimation(slide);
-                break;
-//                howls.startAnimation(rotate);
-            case 1:
-                switch_howls.startAnimation(slide);
-                break;
-//                switch_howls.startAnimation(rotate);
-            case 2:
-                howls1.startAnimation(slide);
-                break;
-//                howls1.startAnimation(rotate);
-            case 3:
-                switch_howls1.startAnimation(slide);
-                break;
-//                switch_howls1.startAnimation(rotate);
-
-        }
+        v.startAnimation(slide);
+        v.animate().rotation(-30).start();
 
         slide.setAnimationListener(new Animation.AnimationListener() {
 
@@ -974,36 +493,21 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
         });
 
+        myLayout.removeView(v);
+
     }
 
-    public void SlideToDown() {
+    //SlideToDown Animation
+    public void SlideToDown(View v) {
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                 0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
         // RotateAnimation rotate = new RotateAnimation(180, 250, Animation.RELATIVE_TO_SELF, 0.5f,  Animation.RELATIVE_TO_SELF, 0.5f);
-        slide.setDuration(5000);
+        slide.setDuration(1500);
 
-
-        switch(animation_view){
-            case 0:
-                howls.startAnimation(slide);
-//                howls.startAnimation(rotate);
-                break;
-            case 1:
-                switch_howls.startAnimation(slide);
-//                switch_howls.startAnimation(rotate);
-                break;
-            case 2:
-                howls1.startAnimation(slide);
-//                howls1.startAnimation(rotate);
-                break;
-            case 3:
-                switch_howls1.startAnimation(slide);
-//                switch_howls1.startAnimation(rotate);
-                break;
-
-        }
+        v.startAnimation(slide);
+        v.animate().rotation(30).start();
 
         slide.setAnimationListener(new Animation.AnimationListener() {
 
@@ -1021,39 +525,107 @@ public class MainFeed extends Activity implements SimpleGestureFilter.SimpleGest
 
         });
 
-    }
-
-    public void moveAnimation(View v){
-        //Rotate ImageView
-//        RotateAnimation rotate = new RotateAnimation(180, 360, Animation.RELATIVE_TO_SELF, 0.5f,  Animation.RELATIVE_TO_SELF, 0.5f);
-//        rotate.setDuration(500);
-//        howls.startAnimation(rotate);
-
-//        howls.setAlpha(0.0f);
-//
-//        howls.animate()
-//                .translationY(howls.getHeight())
-//                .alpha(1.0f);
-       // howls.setVisibility(View.INVISIBLE);
+        myLayout.removeView(v);
 
 
     }
 
-    public void shiftAnimation(){
-        howls.animate()
-                .translationY(0)
-                .alpha(0.0f);
-//                .setListener(new AnimatorListenerAdapter() {
-//                    @Override
-//                    public void onAnimationEnd(Animator animation) {
-//                        super.onAnimationEnd(animation);
-//                    }
-//                });
-    }
-
-    @Override
+    @Override //Facebook ReInitializer
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    //DragView Function
+    private final class ImageOnTouchListener implements View.OnTouchListener {
+        private int activePointerId = MotionEvent.INVALID_POINTER_ID;
+
+        private float initialTouchX = 0;
+        private float initialTouchY = 0;
+
+        private float lastTouchX = 0;
+        private float lastTouchY = 0;
+
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            final int action = MotionEventCompat.getActionMasked(event);
+
+            switch (action) {
+                case MotionEvent.ACTION_DOWN: {
+                    activePointerId = MotionEventCompat.getPointerId(event, 0);
+
+                    initialTouchX = event.getRawX();
+                    initialTouchY = event.getRawY();
+
+                    lastTouchX = event.getRawX();
+                    lastTouchY = event.getRawY();
+
+                    break;
+                }
+                case MotionEvent.ACTION_MOVE: {
+                    final float x = event.getRawX();
+                    final float y = event.getRawY();
+
+                    final float dx = x - lastTouchX;
+                    final float dy = y - lastTouchY;
+
+                    v.setX(v.getX() + dx);
+                    v.setY(v.getY() + dy);
+
+                    lastTouchX = x;
+                    lastTouchY = y;
+
+//                    ImageView imageView = (ImageView) v;
+//
+//                    if(dy>50){
+//                        imageView.setColorFilter(Color.argb(75,0, 100,0)); //green
+//
+//                    }
+//                    else if(dy<-50){
+//                        imageView.setColorFilter(Color.argb(75,100,0,0));  //red
+//                    }
+//                    else{
+//                        imageView.setColorFilter(Color.argb(0, 0, 0, 0));  //clear
+//
+//                    }
+                    break;
+                }
+                case MotionEvent.ACTION_POINTER_UP: {
+                    final int pointerIndex = MotionEventCompat.getActionIndex(event);
+                    final int pointerId = MotionEventCompat.findPointerIndex(event, pointerIndex);
+                    if (pointerId == activePointerId) {
+                        final int newPointerIndex = pointerIndex == 0 ? 1 : 0;
+                        lastTouchX = event.getRawX();
+                        lastTouchY = event.getRawY();
+                        activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
+                    }
+
+                    break;
+                }
+                case MotionEvent.ACTION_CANCEL:
+                    break;
+                case MotionEvent.ACTION_UP: {
+                    final float totaldy = initialTouchY - lastTouchY;
+
+                    if(totaldy>50){
+                        incrHowls(1);
+                        number++;
+                        SlideToAbove(v);
+                    }
+                    else if(totaldy<-50){
+                        incrHowls(-1);
+                        number++;
+                        SlideToDown(v);
+                    } else {
+                        v.setX(initialTouchX);
+                        v.setY(initialTouchY);
+                    }
+                    activePointerId = MotionEvent.INVALID_POINTER_ID;
+                    break;
+                }
+            }
+
+            return true;
+        }
     }
 }
