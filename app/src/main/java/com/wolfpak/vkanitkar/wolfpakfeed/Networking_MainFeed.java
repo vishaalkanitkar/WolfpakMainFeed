@@ -33,7 +33,7 @@ public class Networking_MainFeed{
     private CustomView_MainFeed customView;
 
     //Arrays for JSON Object String
-    private String[] HowlsURL;
+    public String[] HowlsURL;
     private String[] HowlsIsImage;
     private String[] HowlsUserID;
     private String[] HowlsPostID;
@@ -112,6 +112,7 @@ public class Networking_MainFeed{
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 final JSONArray arr;
                 try {
+                    Log.v("CHECK",""+new String(response));
                     arr = new JSONArray(new String(response));
                     Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("media_url"));
                     Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("is_image"));
@@ -120,8 +121,7 @@ public class Networking_MainFeed{
                     mainFeed.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            for (int x = 0; x < 5; x++) {
-
+                            for (int x = 0; x < 5 || x < arr.length(); x++) {
                                 try {
                                     HowlsURL[x] = arr.getJSONObject(x).optString("media_url");
                                 } catch (JSONException e) {
@@ -152,7 +152,7 @@ public class Networking_MainFeed{
                     });
 
                     for (int x = 4; x > -1; x--) {
-                        customView.loadViews(HowlsIsImage[x], HowlsURL[x]);
+                        customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
                     }
 
                 } catch (JSONException e) {
@@ -173,12 +173,12 @@ public class Networking_MainFeed{
         client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/?post=" + HowlsPostID[mainFeed.number] + "&user_liked=temp_test_id&status=" + status + "/", new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-
+                Log.d("Networking","status :"+statusCode);
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
+                Log.d("Networking","status :"+statusCode);
             }
         });
     }
@@ -267,8 +267,7 @@ public class Networking_MainFeed{
         char[] chars1 = "ABCDEF012GHIJKL345MNOPQR678STUVWXYZ9".toCharArray();
         StringBuilder sb1 = new StringBuilder();
         Random random1 = new Random();
-        for (int i = 0; i < 8; i++)
-        {
+        for (int i = 0; i < 8; i++) {
             char c1 = chars1[random1.nextInt(chars1.length)];
             sb1.append(c1);
         }

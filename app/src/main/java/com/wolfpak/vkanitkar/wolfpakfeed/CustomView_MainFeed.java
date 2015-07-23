@@ -1,24 +1,20 @@
 package com.wolfpak.vkanitkar.wolfpakfeed;
 
+import android.graphics.Point;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
+import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.VideoView;
-
-import com.squareup.picasso.Picasso;
-
-import java.util.Objects;
+import android.widget.RelativeLayout;
 
 /**
  * Created by Vishaal on 7/20/15.
  */
 public class CustomView_MainFeed{
-    private FrameLayout myLayout;
+    private RelativeLayout myLayout;
     private Networking_MainFeed network;
     private MainFeed mainFeed;
 
@@ -28,47 +24,22 @@ public class CustomView_MainFeed{
     }
 
     //PreLoad Views
-    public void loadViews(String string, String url){
-        myLayout = (FrameLayout) mainFeed.findViewById(R.id.frame);
-        if(Objects.equals(string, "true"))
-            addImageView(url);
-        else
-            addVideoView(url);
+    public void loadViews(String string, String handle, String url){
+        myLayout = (RelativeLayout) mainFeed.findViewById(R.id.frame);
+        addMediaView(url, handle, string);
     }
 
-    //Loads ImageView
-    public void addImageView(String url) {
-        ImageView imageView = new ImageView(mainFeed);
-
-        imageView.setLayoutParams(new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT));
-        //imageView.setId(R.id.classic + number);
-
-        Picasso.with(imageView.getContext()).load(url).into(imageView);
-        imageView.setOnTouchListener(new ImageOnTouchListener());
-        myLayout.addView(imageView);
-        mainFeed.share.bringToFront();
-        mainFeed.report.bringToFront();
-    }
-
-    //Loads VideoView
-    public void addVideoView(String url){
-        VideoView videoView = new VideoView(mainFeed);
-
-        videoView.setLayoutParams(new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT));
-        videoView.setId(videoView.generateViewId());
-        //   videoView.setId(R.id.classic1+number);
-
+    //Loads MediaView
+    public void addMediaView(String url,String handle, String isImage) {
+        MediaView mediaView = new MediaView(mainFeed);
         Uri uri = Uri.parse(url);
-        videoView.setVideoURI(uri);
-        videoView.requestFocus();
-        videoView.start();
+        mediaView.setMediaView(uri, handle, isImage);
 
-        videoView.setOnTouchListener(new ImageOnTouchListener());
-        myLayout.addView(videoView);
+        mediaView.setOnTouchListener(new ImageOnTouchListener());
+        myLayout.addView(mediaView);
+
+        mediaView.setId(mainFeed.number);
+
         mainFeed.share.bringToFront();
         mainFeed.report.bringToFront();
     }
@@ -177,14 +148,24 @@ public class CustomView_MainFeed{
 
                     lastTouchX = x;
                     lastTouchY = y;
+                    MediaView mediaView = (MediaView) v;
 
-//                    if(dy>50){
-//                    }
-//                    else if(dy<-50){
-//                    }
-//                    else{
-//
-//                    }
+                    Display display = mainFeed.getWindowManager().getDefaultDisplay();
+                    Point size = new Point();
+                    display.getSize(size);
+                    double maxY = size.y;
+                    double green = maxY * 0.35;
+                    double red = maxY * 0.65;
+
+                    if(event.getRawY()<green){
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Like);
+                    }
+                    else if(event.getRawY()>red){
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
+                    }
+                    else{
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
+                    }
                     break;
                 }
                 case MotionEvent.ACTION_POINTER_UP: {
@@ -196,27 +177,37 @@ public class CustomView_MainFeed{
                         lastTouchY = event.getRawY();
                         activePointerId = MotionEventCompat.getPointerId(event, newPointerIndex);
                     }
-
                     break;
                 }
                 case MotionEvent.ACTION_CANCEL:
                     break;
                 case MotionEvent.ACTION_UP: {
-                    final float totaldy = initialTouchY - lastTouchY;
+                    //final float totaldy = initialTouchY - lastTouchY;
+                    MediaView mediaView = (MediaView) v;
+                    Display display = mainFeed.getWindowManager().getDefaultDisplay();
+                    Point size = new Point();
+                    display.getSize(size);
+                    double maxY = size.y;
+                    double green = maxY * 0.35;
+                    double red = maxY * 0.65;
 
-                    if(totaldy>50){
+                    if(event.getRawY()<green){ //(totaldy>50)
                         network.incrHowls(1);
                         mainFeed.number++;
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Like);
                         SlideToAbove(v);
                     }
-                    else if(totaldy<-50){
+                    else if(event.getRawY()>red){
                         network.incrHowls(-1);
                         mainFeed.number++;
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
                         SlideToDown(v);
                     } else {
-                        v.setX(initialTouchX);
-                        v.setY(initialTouchY);
+                        v.setX(0);
+                        v.setY(0);
+                        mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
                     }
+
                     activePointerId = MotionEvent.INVALID_POINTER_ID;
                     break;
                 }

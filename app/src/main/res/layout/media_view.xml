@@ -10,7 +10,8 @@
         android:visibility="gone"
         android:scaleType="fitXY"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:contentDescription="@string/img"/>
 
     <VideoView
         android:id="@+id/mediaVideoView"
@@ -20,9 +21,12 @@
 
     <View
         android:id="@+id/likeStatusOverlayView"
-        android:alpha="0.7"
+        android:alpha="0.5"
+        android:src="@drawable/paw"
         android:layout_alignBottom="@id/mediaImageView"
-        android:layout_alignLeft="@id/mediaImageView"
+        android:layout_alignStart="@id/mediaImageView"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:background="#0b000000" />
+
 </RelativeLayout>

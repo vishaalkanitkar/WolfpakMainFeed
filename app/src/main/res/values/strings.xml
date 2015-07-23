@@ -10,4 +10,5 @@
     <string name="dislike">DISLIKE</string>
     <string name="like">LIKE</string>
     <string name="view">view</string>
+    <string name="img">imageview</string>
 </resources>

@@ -39,9 +39,10 @@ public class MainFeed extends Activity{
     //Layouts & Buttons
     public ImageView refresh_howl;
     public ImageButton report;
-    private ImageButton share;
+    public ImageButton share;
 
     Networking_MainFeed network = new Networking_MainFeed(this);
+    //CustomView_MainFeed customView = new CustomView_MainFeed(this,network);
 
     public int number = 0;
 
@@ -153,8 +154,8 @@ public class MainFeed extends Activity{
     }
 
     //Share Video to Facebook
-    public void shareVideoFB(){
-                    Uri mUri = null;
+    public void shareVideoFB(String url){
+                    Uri mUri = Uri.parse(url);
                     try {
                         Field mUriField = VideoView.class.getDeclaredField("mUri");
                         mUriField.setAccessible(true);
