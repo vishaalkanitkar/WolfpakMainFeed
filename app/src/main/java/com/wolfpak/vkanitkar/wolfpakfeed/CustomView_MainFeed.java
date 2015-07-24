@@ -3,6 +3,7 @@ package com.wolfpak.vkanitkar.wolfpakfeed;
 import android.graphics.Point;
 import android.net.Uri;
 import android.support.v4.view.MotionEventCompat;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,9 +19,16 @@ public class CustomView_MainFeed{
     private Networking_MainFeed network;
     private MainFeed mainFeed;
 
+    private MediaView[] views;
+    public int num;
+
+
     public CustomView_MainFeed(MainFeed mainFeed, Networking_MainFeed network){
         this.mainFeed = mainFeed;
         this.network = network;
+
+        views = new MediaView[5];
+        num = 0;
     }
 
     //PreLoad Views
@@ -38,7 +46,16 @@ public class CustomView_MainFeed{
         mediaView.setOnTouchListener(new ImageOnTouchListener());
         myLayout.addView(mediaView);
 
-        mediaView.setId(mainFeed.number);
+        Log.d("debug1test", String.valueOf(mainFeed.number));
+
+        views[num] = mediaView;
+        num++;
+
+        if(network.HowlsIsImage[0]=="false"){
+            views[0].mediaVideoView.start();
+        }
+
+//        mediaView.setId(mainFeed.number);
 
         mainFeed.share.bringToFront();
         mainFeed.report.bringToFront();
@@ -196,12 +213,24 @@ public class CustomView_MainFeed{
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Like);
                         SlideToAbove(v);
+                        if(network.HowlsIsImage[mainFeed.number]=="false"){
+//                            Log.d("debug1test", String.valueOf(mainFeed.number));
+//                            Log.d("debug2test", views[mainFeed.number] == null ? "NULL" : "NOT NULL");
+//                            Log.d("debug3test", views[mainFeed.number].mediaVideoView == null ? "NULL" : "NOT NULL");
+//                            if(views[mainFeed.number].mediaVideoView==null){
+//                                Log.d("customview", "aadeshisgay");
+//                            }
+                            views[mainFeed.number].mediaVideoView.start();
+                        }
                     }
                     else if(event.getRawY()>red){
                         network.incrHowls(-1);
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
                         SlideToDown(v);
+                        if(network.HowlsIsImage[mainFeed.number]=="false"){
+                            views[mainFeed.number].mediaVideoView.start();
+                        }
                     } else {
                         v.setX(0);
                         v.setY(0);

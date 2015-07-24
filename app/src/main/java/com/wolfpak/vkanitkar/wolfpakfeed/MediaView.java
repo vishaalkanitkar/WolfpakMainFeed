@@ -19,11 +19,11 @@ public class MediaView extends RelativeLayout {
         Like,
         Neutral,
         Dislike
-    };
+    }
 
     // Private variables
     private ImageView mediaImageView;
-    private VideoView mediaVideoView;
+    public VideoView mediaVideoView;
 //    private TextView mediaTextView;
 
     private View likeStatusOverlayView;
@@ -99,16 +99,16 @@ public class MediaView extends RelativeLayout {
             this.mediaVideoView.setVisibility(View.VISIBLE);
             this.mediaVideoView.setVideoURI(mediaUrl);
             this.mediaVideoView.requestFocus();
-            this.mediaVideoView.start();
-//            mediaVideoView.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View arg0) {
-//                    if (mediaTextView.getVisibility() == View.INVISIBLE)
-//                        mediaTextView.setVisibility(View.VISIBLE);
-//                    else
-//                        mediaTextView.setVisibility(View.INVISIBLE);
-//                }
-//            });
+//            this.mediaVideoView.start();
+////            mediaVideoView.setOnClickListener(new View.OnClickListener() {
+////                @Override
+////                public void onClick(View arg0) {
+////                    if (mediaTextView.getVisibility() == View.INVISIBLE)
+////                        mediaTextView.setVisibility(View.VISIBLE);
+////                    else
+////                        mediaTextView.setVisibility(View.INVISIBLE);
+////                }
+////            });
         }
     }
 

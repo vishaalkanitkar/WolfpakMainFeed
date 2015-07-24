@@ -42,7 +42,7 @@ public class MainFeed extends Activity{
     public ImageButton share;
 
     Networking_MainFeed network = new Networking_MainFeed(this);
-    //CustomView_MainFeed customView = new CustomView_MainFeed(this,network);
+    CustomView_MainFeed customView = new CustomView_MainFeed(this,network);
 
     public int number = 0;
 
@@ -132,6 +132,7 @@ public class MainFeed extends Activity{
             @Override
             public void onClick(View arg0) {
                 number = 0;
+                customView.num = 0;
                 network.getHowls();
             }
         });

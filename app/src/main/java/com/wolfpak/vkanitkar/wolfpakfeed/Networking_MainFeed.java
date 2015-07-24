@@ -14,6 +14,7 @@ import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 
 import org.apache.http.Header;
 import org.json.JSONArray;
@@ -34,7 +35,7 @@ public class Networking_MainFeed{
 
     //Arrays for JSON Object String
     public String[] HowlsURL;
-    private String[] HowlsIsImage;
+    public String[] HowlsIsImage;
     private String[] HowlsUserID;
     private String[] HowlsPostID;
     private String[] HowlsHandle;
@@ -54,7 +55,7 @@ public class Networking_MainFeed{
         this.mainFeed = mainFeed;
 
         customView = new CustomView_MainFeed(mainFeed, this);
-        length = 10;
+        length = 10; //array_list
         HowlsURL = new String[length];
         HowlsIsImage = new String[length];
         HowlsUserID = new String[length];
@@ -150,7 +151,7 @@ public class Networking_MainFeed{
                             }
                         }
                     });
-
+                    customView.num = 0;
                     for (int x = 4; x > -1; x--) {
                         customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
                     }
@@ -170,10 +171,16 @@ public class Networking_MainFeed{
     //Asynchronous HTTP Client - Incr/Decr Image/Video in Server
     public void incrHowls(int status) {
         AsyncHttpClient client1 = new AsyncHttpClient(true, 80, 443);
-        client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/?post=" + HowlsPostID[mainFeed.number] + "&user_liked=temp_test_id&status=" + status + "/", new AsyncHttpResponseHandler() {
+        RequestParams params = new RequestParams();
+        params.put("post",HowlsPostID[mainFeed.number]);
+        params.put("user_liked","temp_test_id");
+        params.put("status",status);
+        client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/",params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                Log.d("Networking","status :"+statusCode);
+                Log.d("Networking1","status :"+statusCode);
+              //  Log.d("Networking","status :"+HowlsPostID[mainFeed.number]);
+
             }
 
             @Override
@@ -208,6 +215,7 @@ public class Networking_MainFeed{
                         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
                         input.setInputType(InputType.TYPE_CLASS_TEXT);
                         alertDialogBuilder.setView(input);
+
                         final AsyncHttpClient reportput = new AsyncHttpClient(true, 80, 443);
 
                         alertDialogBuilder
