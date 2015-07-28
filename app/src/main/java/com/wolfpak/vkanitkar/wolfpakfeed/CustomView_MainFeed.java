@@ -11,15 +11,17 @@ import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.RelativeLayout;
 
+import java.util.Objects;
+
 /**
  * Created by Vishaal on 7/20/15.
  */
 public class CustomView_MainFeed{
     private RelativeLayout myLayout;
-    private Networking_MainFeed network;
     private MainFeed mainFeed;
+    private Networking_MainFeed network;
 
-    private MediaView[] views;
+    public MediaView[] views;
     public int num;
 
 
@@ -27,50 +29,42 @@ public class CustomView_MainFeed{
         this.mainFeed = mainFeed;
         this.network = network;
 
-        views = new MediaView[5];
-        num = 0;
+        views = new MediaView[6];
+        num = network.count;
     }
 
-    //PreLoad Views
-    public void loadViews(String string, String handle, String url){
+    /** PreLoad Views **/
+    public void loadViews(String isImage, String handle, String url){
         myLayout = (RelativeLayout) mainFeed.findViewById(R.id.frame);
-        addMediaView(url, handle, string);
-    }
-
-    //Loads MediaView
-    public void addMediaView(String url,String handle, String isImage) {
         MediaView mediaView = new MediaView(mainFeed);
+
         Uri uri = Uri.parse(url);
         mediaView.setMediaView(uri, handle, isImage);
 
         mediaView.setOnTouchListener(new ImageOnTouchListener());
         myLayout.addView(mediaView);
 
-        Log.d("debug1test", String.valueOf(mainFeed.number));
-
         views[num] = mediaView;
+//        views[0].setOnTouchListener(new ImageOnTouchListener());
         num++;
-
-        if(network.HowlsIsImage[0]=="false"){
-            views[0].mediaVideoView.start();
-        }
-
-//        mediaView.setId(mainFeed.number);
 
         mainFeed.share.bringToFront();
         mainFeed.report.bringToFront();
     }
 
-    //SlideToAbove Animation
+    public void startNew(){
+        Log.v("DEBUG", String.valueOf(views[0]));
+        views[0].setOnTouchListener(new ImageOnTouchListener());
+    }
+
+    /** Slide Up Animation **/
     public void SlideToAbove(View v) {
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                 0.0f, Animation.RELATIVE_TO_PARENT, -5.0f);
+        slide.setDuration(750);
 
-        slide.setDuration(1500);
-//        RotateAnimation rotate = new RotateAnimation(180, 250, Animation.RELATIVE_TO_SELF, 0.5f,  Animation.RELATIVE_TO_SELF, 0.5f);
-//        rotate.setDuration(5000);
         v.startAnimation(slide);
         v.animate().rotation(-30).start();
 
@@ -94,14 +88,13 @@ public class CustomView_MainFeed{
 
     }
 
-    //SlideToDown Animation
+    /** Slide Down Animation **/
     public void SlideToDown(View v) {
         Animation slide;
         slide = new TranslateAnimation(Animation.RELATIVE_TO_PARENT, 0.0f,
                 Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT,
                 0.0f, Animation.RELATIVE_TO_PARENT, 5.2f);
-        // RotateAnimation rotate = new RotateAnimation(180, 250, Animation.RELATIVE_TO_SELF, 0.5f,  Animation.RELATIVE_TO_SELF, 0.5f);
-        slide.setDuration(1500);
+        slide.setDuration(751);
 
         v.startAnimation(slide);
         v.animate().rotation(30).start();
@@ -127,12 +120,9 @@ public class CustomView_MainFeed{
 
     }
 
-    //DragView Function
-    private final class ImageOnTouchListener implements View.OnTouchListener {
+    /** DragView Function **/
+    public final class ImageOnTouchListener implements View.OnTouchListener {
         private int activePointerId = MotionEvent.INVALID_POINTER_ID;
-
-        private float initialTouchX = 0;
-        private float initialTouchY = 0;
 
         private float lastTouchX = 0;
         private float lastTouchY = 0;
@@ -144,9 +134,6 @@ public class CustomView_MainFeed{
             switch (action) {
                 case MotionEvent.ACTION_DOWN: {
                     activePointerId = MotionEventCompat.getPointerId(event, 0);
-
-                    initialTouchX = event.getRawX();
-                    initialTouchY = event.getRawY();
 
                     lastTouchX = event.getRawX();
                     lastTouchY = event.getRawY();
@@ -199,7 +186,6 @@ public class CustomView_MainFeed{
                 case MotionEvent.ACTION_CANCEL:
                     break;
                 case MotionEvent.ACTION_UP: {
-                    //final float totaldy = initialTouchY - lastTouchY;
                     MediaView mediaView = (MediaView) v;
                     Display display = mainFeed.getWindowManager().getDefaultDisplay();
                     Point size = new Point();
@@ -208,40 +194,53 @@ public class CustomView_MainFeed{
                     double green = maxY * 0.35;
                     double red = maxY * 0.65;
 
-                    if(event.getRawY()<green){ //(totaldy>50)
+                    if(event.getRawY()<green){
                         network.incrHowls(1);
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Like);
                         SlideToAbove(v);
-                        if(network.HowlsIsImage[mainFeed.number]=="false"){
-//                            Log.d("debug1test", String.valueOf(mainFeed.number));
-//                            Log.d("debug2test", views[mainFeed.number] == null ? "NULL" : "NOT NULL");
-//                            Log.d("debug3test", views[mainFeed.number].mediaVideoView == null ? "NULL" : "NOT NULL");
-//                            if(views[mainFeed.number].mediaVideoView==null){
-//                                Log.d("customview", "aadeshisgay");
-//                            }
-                            views[mainFeed.number].mediaVideoView.start();
-                        }
+//                        if(network.HowlsIsImage[mainFeed.number]!= null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")){
+//                            views[mainFeed.number].mediaVideoView.start();
+//                        }
                     }
                     else if(event.getRawY()>red){
                         network.incrHowls(-1);
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
                         SlideToDown(v);
-                        if(network.HowlsIsImage[mainFeed.number]=="false"){
-                            views[mainFeed.number].mediaVideoView.start();
-                        }
+//                        if(network.HowlsIsImage[mainFeed.number]!= null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")){
+//                            views[mainFeed.number].mediaVideoView.start();
+//                        }
                     } else {
                         v.setX(0);
                         v.setY(0);
                         mediaView.setLikeStatus(MediaView.LikeStatus.Neutral);
                     }
 
+                    if (network.HowlsIsImage[mainFeed.number] != null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")) {
+                        views[mainFeed.number].mediaVideoView.start();
+                    }
+
+//                    if(views[mainFeed.number] != null){
+//                        views[mainFeed.number].setOnTouchListener(new ImageOnTouchListener());
+//                    }
+
+                    /** AUTO REFRESH **/
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if(mainFeed.number == network.count){
+                        mainFeed.number = 0;
+                        num = 0;
+                        network.getHowls();
+                    }
+
                     activePointerId = MotionEvent.INVALID_POINTER_ID;
                     break;
                 }
             }
-
             return true;
         }
     }

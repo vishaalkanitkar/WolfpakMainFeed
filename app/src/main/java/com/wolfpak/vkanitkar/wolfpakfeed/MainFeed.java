@@ -36,7 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MainFeed extends Activity{
-    //Layouts & Buttons
+
+    /** Layouts & Buttons **/
     public ImageView refresh_howl;
     public ImageButton report;
     public ImageButton share;
@@ -46,7 +47,7 @@ public class MainFeed extends Activity{
 
     public int number = 0;
 
-    //Facebook Share Features
+    /** Facebook Share Features **/
     private ShareDialog shareDialog;
     private CallbackManager callbackManager;
     public LoginManager manager;
@@ -55,13 +56,13 @@ public class MainFeed extends Activity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //get rid of status bar
+        /** Get Rid of Status Bar **/
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_feed);
 
-        //Initialize SDK & Check Security Key Hash
+        /** Initialize SDK & Check Security Key Hash **/
         FacebookSdk.sdkInitialize(getApplicationContext());
         try {
             PackageInfo info = getPackageManager().getPackageInfo(
@@ -72,23 +73,22 @@ public class MainFeed extends Activity{
                 md.update(signature.toByteArray());
                 Log.d("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
             }
-        } catch (PackageManager.NameNotFoundException e) {
-        } catch (NoSuchAlgorithmException e) {
+        } catch (PackageManager.NameNotFoundException | NoSuchAlgorithmException ignored) {
         }
 
-        //Reference Refresh and FrameLayout
+        /** Reference Refresh and FrameLayout **/
         refresh_howl = (ImageView) findViewById(R.id.imageView2);
 
-        //Dialogs
+        /** Dialogs **/
         report = (ImageButton) findViewById(R.id.imageButton);
         share = (ImageButton) findViewById(R.id.imageButton1);
 
-        network.intializeQueryString();
+        network.initializeQueryString();
 
-        //Pull Howls from server
+        /** Pull Howls from Server **/
         network.getHowls();
 
-        //Facebook Share Feature
+        /** Facebook Share Feature **/
         callbackManager = CallbackManager.Factory.create();
         List<String> permissionNeeds = Arrays.asList("publish_actions");
         manager = LoginManager.getInstance();
@@ -120,7 +120,7 @@ public class MainFeed extends Activity{
             }
         });
 
-        //Report_Button listener
+        /** Report_Button Listener **/
         report.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -128,6 +128,7 @@ public class MainFeed extends Activity{
             }
         });
 
+        /** Refresh_Button Listener **/
         refresh_howl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
@@ -138,7 +139,7 @@ public class MainFeed extends Activity{
         });
     }
 
-    //Share Picture to Facebook
+    /** Share Picture to Facebook **/
     public void sharePicFB(ImageView imageView) {
         imageView.buildDrawingCache();
                 Bitmap image = imageView.getDrawingCache();
@@ -154,14 +155,14 @@ public class MainFeed extends Activity{
 
     }
 
-    //Share Video to Facebook
+    /** Share Video to Facebook **/
     public void shareVideoFB(String url){
                     Uri mUri = Uri.parse(url);
                     try {
                         Field mUriField = VideoView.class.getDeclaredField("mUri");
                         mUriField.setAccessible(true);
                        // mUri = (Uri)mUriField.get(howls1);
-                    } catch(Exception e) {
+                    } catch(Exception ignored) {
                     }
 
                     ShareVideo video= new ShareVideo.Builder()
@@ -174,10 +175,10 @@ public class MainFeed extends Activity{
                     shareDialog.show(content);
     }
 
-    @Override //Facebook ReInitializer
+    @Override
+    /**Facebook ReInitializer **/
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
-
 }

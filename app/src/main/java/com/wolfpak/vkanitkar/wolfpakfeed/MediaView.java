@@ -24,7 +24,6 @@ public class MediaView extends RelativeLayout {
     // Private variables
     private ImageView mediaImageView;
     public VideoView mediaVideoView;
-//    private TextView mediaTextView;
 
     private View likeStatusOverlayView;
 
@@ -55,21 +54,20 @@ public class MediaView extends RelativeLayout {
     public void setLikeStatus(LikeStatus likeStatus) {
         switch (likeStatus) {
             case Like:
-//                this.likeStatusOverlayView.setBackgroundResource(R.drawable.paw);
                 this.likeStatusOverlayView.setBackgroundColor(Color.argb(100, 0, 255, 0));
                 break;
 
             case Dislike:
-//                this.likeStatusOverlayView.setBackgroundResource(R.drawable.paw);
                 this.likeStatusOverlayView.setBackgroundColor(Color.argb(100, 255, 0, 0));
                 break;
 
             case Neutral:
-                this.likeStatusOverlayView.setBackgroundColor(Color.TRANSPARENT);
+                this.likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
                 break;
-//            default:
-//                this.likeStatusOverlayView.setBackgroundColor(Color.TRANSPARENT);
-//                break;
+
+            default:
+                this.likeStatusOverlayView.setBackgroundColor(Color.argb(0,0,0,0));
+                break;
         }
     }
 
@@ -80,35 +78,16 @@ public class MediaView extends RelativeLayout {
      * @param isImage boolean of whether or not the mediaUrl is an image
      */
     public void setMediaView(Uri mediaUrl, String handle, String isImage) {
-//        mediaTextView.setText(handle.toCharArray(), 0, handle.length());
-
         if (Objects.equals(isImage, "true")) {
             this.mediaImageView.setVisibility(View.VISIBLE);
             Picasso.with(this.mediaImageView.getContext()).load(mediaUrl).into(this.mediaImageView);
-//            mediaImageView.setOnClickListener(new View.OnClickListener() {
-//                @Override
-//                public void onClick(View arg0) {
-//                   if(mediaTextView.getVisibility() == View.INVISIBLE)
-//                       mediaTextView.setVisibility(View.VISIBLE);
-//                    else
-//                       mediaTextView.setVisibility(View.INVISIBLE);
-//                }
-//            });
 
         } else {
             this.mediaVideoView.setVisibility(View.VISIBLE);
             this.mediaVideoView.setVideoURI(mediaUrl);
             this.mediaVideoView.requestFocus();
 //            this.mediaVideoView.start();
-////            mediaVideoView.setOnClickListener(new View.OnClickListener() {
-////                @Override
-////                public void onClick(View arg0) {
-////                    if (mediaTextView.getVisibility() == View.INVISIBLE)
-////                        mediaTextView.setVisibility(View.VISIBLE);
-////                    else
-////                        mediaTextView.setVisibility(View.INVISIBLE);
-////                }
-////            });
+
         }
     }
 
@@ -120,8 +99,7 @@ public class MediaView extends RelativeLayout {
 
         this.mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
         this.mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
-//        this.mediaTextView = (TextView) this.findViewById(R.id.handle);
 
-        this.likeStatusOverlayView = (View)findViewById(R.id.likeStatusOverlayView);
+        this.likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
     }
 }

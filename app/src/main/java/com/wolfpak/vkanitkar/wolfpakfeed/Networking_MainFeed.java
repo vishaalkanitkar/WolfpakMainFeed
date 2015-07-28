@@ -9,7 +9,6 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.text.InputType;
-import android.util.Log;
 import android.widget.EditText;
 
 import com.loopj.android.http.AsyncHttpClient;
@@ -33,29 +32,33 @@ public class Networking_MainFeed{
     private MainFeed mainFeed;
     private CustomView_MainFeed customView;
 
-    //Arrays for JSON Object String
+    /** Arrays for JSON Object String **/
     public String[] HowlsURL;
     public String[] HowlsIsImage;
     private String[] HowlsUserID;
     private String[] HowlsPostID;
     private String[] HowlsHandle;
 
-    //Location
+    /** Location **/
     public LocationManager lm;
     public Location location;
     private double longitude;
     private double latitude;
     public String deviceId;
 
-    //Random Number
+    /** Random Number **/
     private String random_string;
     private String random_input;
 
+    public int count;
+
     public Networking_MainFeed(MainFeed mainFeed){
         this.mainFeed = mainFeed;
+        this.customView = new CustomView_MainFeed(mainFeed, this);
 
-        customView = new CustomView_MainFeed(mainFeed, this);
-        length = 10; //array_list
+        length = 10;
+        count = 0;
+
         HowlsURL = new String[length];
         HowlsIsImage = new String[length];
         HowlsUserID = new String[length];
@@ -64,14 +67,14 @@ public class Networking_MainFeed{
         random_input = "";
     }
 
-    public void intializeQueryString() {
-        //Setting Location for get() query string
+    public void initializeQueryString() {
+        /** Setting Location for get() query string **/
         lm = (LocationManager) mainFeed.getSystemService(Context.LOCATION_SERVICE);
         location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         longitude = location.getLongitude();
         latitude = location.getLatitude();
 
-        //Location Update Detector
+        /** Location Update Detector **/
         final LocationListener locationListener = new LocationListener() {
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -92,7 +95,7 @@ public class Networking_MainFeed{
         };
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
 
-        //Android System Unique ID
+        /** Android System Unique ID **/
         final TelephonyManager tm = (TelephonyManager) mainFeed.getBaseContext()
                 .getSystemService(Context.TELEPHONY_SERVICE);
         final String tmDevice, tmSerial, androidId;
@@ -105,19 +108,18 @@ public class Networking_MainFeed{
         deviceId = deviceUuid.toString();
     }
 
-    //Asynchronous HTTP Client - Pull Image/Video from Server
+    /** Asynchronous HTTP Client - Pull Image/Video from Server **/
     public void getHowls(){
         AsyncHttpClient client = new AsyncHttpClient(true, 80, 443);
-        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id" + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/", new AsyncHttpResponseHandler() {
+        client.get("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/?user_id=" + "temp_test_id"
+                + "&latitude=" + latitude + "&longitude=" + longitude + "&isNSFW=true&limit=5/",
+                new AsyncHttpResponseHandler() {
+
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                 final JSONArray arr;
                 try {
-                    Log.v("CHECK",""+new String(response));
                     arr = new JSONArray(new String(response));
-                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("media_url"));
-                    Log.v("com.wolfpakapp.httpreqs", arr.getJSONObject(0).optString("is_image"));
-                    Log.v("com.wolfpakapp.httpreqs", String.valueOf(arr.length()));
 
                     mainFeed.runOnUiThread(new Runnable() {
                         @Override
@@ -149,13 +151,20 @@ public class Networking_MainFeed{
                                     e.printStackTrace();
                                 }
                             }
+
+                            customView.num = 0;
+                            int size = arr.length() - 1;
+                            count = arr.length();
+
+                            for (int x = size; x > -1; x--) {
+                                customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
+                            }
+
+                            if(Objects.equals(HowlsIsImage[0], "false")){
+                                customView.views[0].mediaVideoView.start();
+                            }
                         }
                     });
-                    customView.num = 0;
-                    for (int x = 4; x > -1; x--) {
-                        customView.loadViews(HowlsIsImage[x], HowlsHandle[x], HowlsURL[x]);
-                    }
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -168,7 +177,7 @@ public class Networking_MainFeed{
 
     }
 
-    //Asynchronous HTTP Client - Incr/Decr Image/Video in Server
+    /** Asynchronous HTTP Client - Incr/Decr Image/Video in Server **/
     public void incrHowls(int status) {
         AsyncHttpClient client1 = new AsyncHttpClient(true, 80, 443);
         RequestParams params = new RequestParams();
@@ -178,19 +187,15 @@ public class Networking_MainFeed{
         client1.post("https://ec2-52-4-176-1.compute-1.amazonaws.com/like_status/",params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                Log.d("Networking1","status :"+statusCode);
-              //  Log.d("Networking","status :"+HowlsPostID[mainFeed.number]);
-
             }
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                Log.d("Networking","status :"+statusCode);
             }
         });
     }
 
-    //Asynchronous HTTP Client - Reports Image/Video in Server
+    /** Asynchronous HTTP Client - Reports Image/Video in Server **/
     public void reportHowl(){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed);
         final EditText random = new EditText(mainFeed);
@@ -205,24 +210,26 @@ public class Networking_MainFeed{
                 .setMessage("Do you really want to report this howl?")
                 .setCancelable(false)
                 .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        randomstring();
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed);
+                        Networking_MainFeed.this.randomstring();
+                        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed);
                         // set title
-                        alertDialogBuilder.setTitle("Type Captcha in order to report!");
+                        alertDialogBuilder1.setTitle("Type Captcha in order to report!");
                         // set dialog message
 
                         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
                         input.setInputType(InputType.TYPE_CLASS_TEXT);
-                        alertDialogBuilder.setView(input);
+                        alertDialogBuilder1.setView(input);
 
                         final AsyncHttpClient reportput = new AsyncHttpClient(true, 80, 443);
 
-                        alertDialogBuilder
+                        alertDialogBuilder1
                                 .setMessage("CAPTCHA = " + random_string)
                                 .setCancelable(false)
                                 .setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
+                                    @Override
+                                    public void onClick(DialogInterface dialog1, int id1) {
                                         random_input = input.getText().toString();
                                         if (Objects.equals(random_string, random_input)) {
                                             reportput.put("https://ec2-52-4-176-1.compute-1.amazonaws.com/posts/flag/" + HowlsPostID[mainFeed.number] + "/", new AsyncHttpResponseHandler() {
@@ -235,27 +242,29 @@ public class Networking_MainFeed{
                                                 }
                                             });
                                         } else {
-                                            dialog.cancel();
+                                            dialog1.cancel();
                                         }
 
                                     }
                                 })
                                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
-                                    public void onClick(DialogInterface dialog, int id) {
+                                    @Override
+                                    public void onClick(DialogInterface dialog1, int id1) {
                                         // if this button is clicked, just close
                                         // the dialog box and do nothing
-                                        dialog.cancel();
+                                        dialog1.cancel();
                                     }
                                 });
 
                         // create alert dialog
-                        AlertDialog alertDialog = alertDialogBuilder.create();
+                        AlertDialog alertDialog = alertDialogBuilder1.create();
 
                         // show it
                         alertDialog.show();
                     }
                 })
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
                     public void onClick(DialogInterface dialog, int id) {
                         // if this button is clicked, just close
                         // the dialog box and do nothing
@@ -270,7 +279,7 @@ public class Networking_MainFeed{
         alertDialog.show();
     }
 
-    //Random Number Generator for reportHowl()
+    /** Random Number Generator for reportHowl() **/
     public void randomstring(){
         char[] chars1 = "ABCDEF012GHIJKL345MNOPQR678STUVWXYZ9".toCharArray();
         StringBuilder sb1 = new StringBuilder();
