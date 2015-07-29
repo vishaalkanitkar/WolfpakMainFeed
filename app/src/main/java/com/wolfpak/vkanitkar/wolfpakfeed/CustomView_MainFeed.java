@@ -30,7 +30,7 @@ public class CustomView_MainFeed{
         this.network = network;
 
         views = new MediaView[6];
-        num = network.count;
+        num = network.count-1;
     }
 
     /** PreLoad Views **/
@@ -39,14 +39,15 @@ public class CustomView_MainFeed{
         MediaView mediaView = new MediaView(mainFeed);
 
         Uri uri = Uri.parse(url);
-        mediaView.setMediaView(uri, handle, isImage);
+        mediaView.setMediaView(uri, url, handle, isImage);
 
         mediaView.setOnTouchListener(new ImageOnTouchListener());
         myLayout.addView(mediaView);
 
         views[num] = mediaView;
+        Log.v("DEBUG", String.valueOf(num));
 //        views[0].setOnTouchListener(new ImageOnTouchListener());
-        num++;
+        num--;
 
         mainFeed.share.bringToFront();
         mainFeed.report.bringToFront();
@@ -192,7 +193,7 @@ public class CustomView_MainFeed{
                     display.getSize(size);
                     double maxY = size.y;
                     double green = maxY * 0.35;
-                    double red = maxY * 0.65;
+                    double red = maxY * 0.66;
 
                     if(event.getRawY()<green){
                         network.incrHowls(1);
@@ -218,6 +219,7 @@ public class CustomView_MainFeed{
                     }
 
                     if (network.HowlsIsImage[mainFeed.number] != null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")) {
+                        views[mainFeed.number].VideoBlack.setVisibility(View.INVISIBLE);
                         views[mainFeed.number].mediaVideoView.start();
                     }
 

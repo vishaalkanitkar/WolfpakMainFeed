@@ -152,7 +152,7 @@ public class Networking_MainFeed{
                                 }
                             }
 
-                            customView.num = 0;
+                            customView.num = arr.length()-1;
                             int size = arr.length() - 1;
                             count = arr.length();
 
