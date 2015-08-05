@@ -6,17 +6,30 @@ android {
 
     defaultConfig {
         applicationId "com.wolfpak.vkanitkar.wolfpakfeed"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 22
         versionCode 1
         versionName "1.0"
+    }
+    signingConfigs {
+        release {
+            storeFile file("myreleasekey.keystore")
+            storePassword "password"
+            keyAlias "MyReleaseKey"
+            keyPassword "password"
+        }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
+}
+
+repositories {
+    mavenCentral()
 }
 
 dependencies {
@@ -24,4 +37,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.2.0'
     compile 'com.loopj.android:android-async-http:1.4.5'
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'com.facebook.android:facebook-android-sdk:4.1.0'
+    compile 'com.android.support:support-v4:+'
+    compile('com.twitter.sdk.android:tweet-composer:0.8.0@aar') { transitive = true; }
+    compile 'com.github.wseemann:FFmpegMediaMetadataRetriever:1.0.1'
 }
