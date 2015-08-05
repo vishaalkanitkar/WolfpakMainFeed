@@ -18,14 +18,14 @@ import java.util.Objects;
  */
 public class CustomView_MainFeed{
     private RelativeLayout myLayout;
-    private MainFeed mainFeed;
+    private MainFeedFragment mainFeed;
     private Networking_MainFeed network;
 
     public MediaView[] views;
     public int num;
 
 
-    public CustomView_MainFeed(MainFeed mainFeed, Networking_MainFeed network){
+    public CustomView_MainFeed(MainFeedFragment mainFeed, Networking_MainFeed network){
         this.mainFeed = mainFeed;
         this.network = network;
 
@@ -35,8 +35,8 @@ public class CustomView_MainFeed{
 
     /** PreLoad Views **/
     public void loadViews(String isImage, String handle, String url){
-        myLayout = (RelativeLayout) mainFeed.findViewById(R.id.frame);
-        MediaView mediaView = new MediaView(mainFeed);
+        myLayout = mainFeed.frame;
+        MediaView mediaView = new MediaView(mainFeed.getActivity());
 
         Uri uri = Uri.parse(url);
         mediaView.setMediaView(uri, url, handle, isImage);
@@ -155,7 +155,7 @@ public class CustomView_MainFeed{
                     lastTouchY = y;
                     MediaView mediaView = (MediaView) v;
 
-                    Display display = mainFeed.getWindowManager().getDefaultDisplay();
+                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
                     Point size = new Point();
                     display.getSize(size);
                     double maxY = size.y;
@@ -188,7 +188,7 @@ public class CustomView_MainFeed{
                     break;
                 case MotionEvent.ACTION_UP: {
                     MediaView mediaView = (MediaView) v;
-                    Display display = mainFeed.getWindowManager().getDefaultDisplay();
+                    Display display = mainFeed.getActivity().getWindowManager().getDefaultDisplay();
                     Point size = new Point();
                     display.getSize(size);
                     double maxY = size.y;
@@ -200,18 +200,12 @@ public class CustomView_MainFeed{
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Like);
                         SlideToAbove(v);
-//                        if(network.HowlsIsImage[mainFeed.number]!= null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")){
-//                            views[mainFeed.number].mediaVideoView.start();
-//                        }
                     }
                     else if(event.getRawY()>red){
                         network.incrHowls(-1);
                         mainFeed.number++;
                         mediaView.setLikeStatus(MediaView.LikeStatus.Dislike);
                         SlideToDown(v);
-//                        if(network.HowlsIsImage[mainFeed.number]!= null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")){
-//                            views[mainFeed.number].mediaVideoView.start();
-//                        }
                     } else {
                         v.setX(0);
                         v.setY(0);
@@ -219,13 +213,9 @@ public class CustomView_MainFeed{
                     }
 
                     if (network.HowlsIsImage[mainFeed.number] != null && Objects.equals(network.HowlsIsImage[mainFeed.number], "false")) {
-                        views[mainFeed.number].VideoBlack.setVisibility(View.INVISIBLE);
                         views[mainFeed.number].mediaVideoView.start();
                     }
 
-//                    if(views[mainFeed.number] != null){
-//                        views[mainFeed.number].setOnTouchListener(new ImageOnTouchListener());
-//                    }
 
                     /** AUTO REFRESH **/
                     try {

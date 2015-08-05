@@ -1,11 +1,8 @@
 package com.wolfpak.vkanitkar.wolfpakfeed;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.media.ThumbnailUtils;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,11 +24,10 @@ public class MediaView extends RelativeLayout {
     // Private variables
     private ImageView mediaImageView;
     public VideoView mediaVideoView;
-    public  ImageView VideoBlack;
 
     private View likeStatusOverlayView;
 
-    // Constructors
+    /** Constructors **/
     public MediaView(Context context) {
         super(context);
         baseInit();
@@ -90,10 +86,13 @@ public class MediaView extends RelativeLayout {
             this.mediaVideoView.setVisibility(View.VISIBLE);
             this.mediaVideoView.setVideoURI(mediaUrl);
             this.mediaVideoView.requestFocus();
-            Bitmap thumb = ThumbnailUtils.createVideoThumbnail(url,
-                    MediaStore.Images.Thumbnails.FULL_SCREEN_KIND);
-            VideoBlack.setImageBitmap(thumb);
-            VideoBlack.setVisibility(VISIBLE);
+            this.mediaVideoView.start();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            this.mediaVideoView.pause();
         }
     }
 
@@ -105,7 +104,6 @@ public class MediaView extends RelativeLayout {
 
         this.mediaImageView = (ImageView)findViewById(R.id.mediaImageView);
         this.mediaVideoView = (VideoView)findViewById(R.id.mediaVideoView);
-        this.VideoBlack = (ImageView)findViewById(R.id.mediaVideoBlackOverlay);
 
         this.likeStatusOverlayView = findViewById(R.id.likeStatusOverlayView);
     }

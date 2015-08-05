@@ -29,7 +29,7 @@ import java.util.UUID;
 public class Networking_MainFeed{
 
     public int length;
-    private MainFeed mainFeed;
+    private MainFeedFragment mainFeed;
     private CustomView_MainFeed customView;
 
     /** Arrays for JSON Object String **/
@@ -52,7 +52,7 @@ public class Networking_MainFeed{
 
     public int count;
 
-    public Networking_MainFeed(MainFeed mainFeed){
+    public Networking_MainFeed(MainFeedFragment mainFeed){
         this.mainFeed = mainFeed;
         this.customView = new CustomView_MainFeed(mainFeed, this);
 
@@ -69,7 +69,7 @@ public class Networking_MainFeed{
 
     public void initializeQueryString() {
         /** Setting Location for get() query string **/
-        lm = (LocationManager) mainFeed.getSystemService(Context.LOCATION_SERVICE);
+        lm = (LocationManager) mainFeed.getActivity().getSystemService(Context.LOCATION_SERVICE);
         location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         longitude = location.getLongitude();
         latitude = location.getLatitude();
@@ -96,13 +96,13 @@ public class Networking_MainFeed{
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 2000, 10, locationListener);
 
         /** Android System Unique ID **/
-        final TelephonyManager tm = (TelephonyManager) mainFeed.getBaseContext()
+        final TelephonyManager tm = (TelephonyManager) mainFeed.getActivity().getBaseContext()
                 .getSystemService(Context.TELEPHONY_SERVICE);
         final String tmDevice, tmSerial, androidId;
         tmDevice = "" + tm.getDeviceId();
         tmSerial = "" + tm.getSimSerialNumber();
         androidId = "" + android.provider.Settings.Secure.getString(
-                mainFeed.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+                mainFeed.getActivity().getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
         UUID deviceUuid = new UUID(androidId.hashCode(),
                 ((long) tmDevice.hashCode() << 32) | tmSerial.hashCode());
         deviceId = deviceUuid.toString();
@@ -121,7 +121,7 @@ public class Networking_MainFeed{
                 try {
                     arr = new JSONArray(new String(response));
 
-                    mainFeed.runOnUiThread(new Runnable() {
+                    mainFeed.getActivity().runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             for (int x = 0; x < 5 || x < arr.length(); x++) {
@@ -197,13 +197,13 @@ public class Networking_MainFeed{
 
     /** Asynchronous HTTP Client - Reports Image/Video in Server **/
     public void reportHowl(){
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed);
-        final EditText random = new EditText(mainFeed);
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(mainFeed.getActivity());
+        final EditText random = new EditText(mainFeed.getActivity());
         random.setInputType(InputType.TYPE_CLASS_TEXT);
 
         // set title
         alertDialogBuilder.setTitle("FLAG!!");
-        final EditText input = new EditText(mainFeed);
+        final EditText input = new EditText(mainFeed.getActivity());
 
         // set dialog message
         alertDialogBuilder
@@ -213,7 +213,7 @@ public class Networking_MainFeed{
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
                         Networking_MainFeed.this.randomstring();
-                        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed);
+                        AlertDialog.Builder alertDialogBuilder1 = new AlertDialog.Builder(mainFeed.getActivity());
                         // set title
                         alertDialogBuilder1.setTitle("Type Captcha in order to report!");
                         // set dialog message

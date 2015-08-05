@@ -11,4 +11,7 @@
     <string name="like">LIKE</string>
     <string name="view">view</string>
     <string name="img">imageview</string>
+
+<!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
